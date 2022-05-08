@@ -92,8 +92,40 @@ def next_layer_first_order(u_prev, a2, sigma, func, alpha, beta, gamma, t_now, t
     return u_next
 
 
-def next_layer_second_order(u_prev, a, sigma, phi, f, alpha, beta, gamma, t_now):
-    return
+def next_layer_second_order(u_prev, a2, sigma, func, alpha, beta, gamma, t_now, tau, h):
+    a = np.zeros(len(u_prev))
+    b = np.zeros(len(u_prev))
+    c = np.zeros(len(u_prev))
+    f = np.zeros(len(u_prev))
+    coef = tau * a2 / h / h
+    for i in range(1, len(u_prev) - 1):
+        a[i] = coef * sigma
+        b[i] = -1 - 2 * coef * sigma
+        c[i] = coef * sigma
+        f[i] = -u_prev[i] + coef * (sigma - 1) * (u_prev[i + 1] - 2 * u_prev[i] + u_prev[i - 1]) - tau * func(i * h,
+                                                                                                              t_now - tau / 2)
+    if beta[0] != 0:
+        a[0] = 0.
+        b[0] = 1 + 2 * coef * sigma - 2 * coef * sigma * h * alpha[0] / beta[0]
+        c[0] = -2 * coef * sigma
+        f[0] = u_prev[0] - 2 * coef * sigma * h * gamma[0](t_now) / beta[0] + 2 * coef * (1 - sigma) * (u_prev[1] - u_prev[0] - h / beta[0] * (gamma[0](t_now) - alpha[0] * u_prev[0])) + tau * func(0, t_now - tau / 2)
+    else:
+        a[0] = 0.
+        b[0] = alpha[0]
+        c[0] = 0.
+        f[0] = gamma[0](t_now)
+    if beta[1] != 0:
+        a[-1] = - 2 * coef * sigma
+        b[-1] = 1 + 2 * coef * sigma * h * alpha[1] / beta[1] + 2 * coef * sigma
+        c[-1] = 0.
+        f[-1] = u_prev[-1] - 2 * coef * sigma * h * gamma[1](t_now) / beta[1] + 2 * coef * (1 - sigma) * (h / beta[1] * (gamma[1](t_now) - alpha[1] * u_prev[-1]) + u_prev[-2] - u_prev[-1]) + tau * func(1., t_now - tau / 2)
+    else:
+        a[-1] = 0.
+        b[-1] = alpha[1]
+        c[-1] = 0.
+        f[-1] = gamma[1](t_now)
+    u_next = solve3diagonal(a, b, c, f)
+    return u_next
 
 
 def animation():
@@ -107,13 +139,13 @@ def animation():
     x_range = np.linspace(x_min, x_max, N)
 
     a, sigma, phi, f, alpha, beta, gamma, u0 = initial_conditions2()
-    next_layer = next_layer_first_order
+    next_layer = next_layer_second_order
 
     u = np.zeros((2, N))
     u[0] = phi(x_range)
 
     fig = plt.figure()
-    ax = plt.axes(xlim=(x_min, x_max), ylim=(-2, 2))
+    ax = plt.axes(xlim=(x_min, x_max), ylim=(-1, 1))
     line, = ax.plot([], [], lw=3)
 
     def init():
@@ -132,7 +164,7 @@ def animation():
             u[0] = u[1]
             u[1] = next_layer(u[0], a, sigma, f, alpha, beta, gamma, t_now, tau, h)
             y = u[1]
-        # y = y - u0(x_range, t_now)  # if there is need to plot the error
+        y = y - u0(x_range, t_now)  # if there is need to plot the error
         line.set_data(x_range, y)
         return line,
 
@@ -149,7 +181,7 @@ def order_of_approximation():
     t_min = 0.  # initial time
     Nt = 50  # number of time steps
     h_range = np.array([0.00025, 0.0005, 0.001, 0.002, 0.0025, 0.005, 0.01])
-    next_layer = next_layer_first_order
+    next_layer = next_layer_second_order
     a, sigma, phi, f, alpha, beta, gamma, u0 = initial_conditions1()
 
     error = np.zeros(len(h_range))
@@ -183,5 +215,5 @@ def order_of_approximation():
 
 
 if __name__ == '__main__':
-    order_of_approximation()  # Call it in order to check the order of approximation
-    # animation()  # Call it in order to draw solution.gif
+    # order_of_approximation()  # Call it in order to check the order of approximation
+    animation()  # Call it in order to draw solution.gif
