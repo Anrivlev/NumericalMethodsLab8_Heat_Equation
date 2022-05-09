@@ -108,7 +108,7 @@ def next_layer_second_order(u_prev, a2, sigma, func, alpha, beta, gamma, t_now, 
         a[0] = 0.
         b[0] = 1 + 2 * coef * sigma - 2 * coef * sigma * h * alpha[0] / beta[0]
         c[0] = -2 * coef * sigma
-        f[0] = u_prev[0] - 2 * coef * sigma * h * gamma[0](t_now) / beta[0] + 2 * coef * (1 - sigma) * (u_prev[1] - u_prev[0] - h / beta[0] * (gamma[0](t_now) - alpha[0] * u_prev[0])) + tau * func(0., t_now - tau / 2)
+        f[0] = u_prev[0] - 2 * coef * sigma * h * gamma[0](t_now) / beta[0] + 2 * coef * (1 - sigma) * (u_prev[1] - u_prev[0] - h / beta[0] * (gamma[0](t_now - tau) - alpha[0] * u_prev[0])) + tau * func(0., t_now - tau / 2)
     else:
         a[0] = 0.
         b[0] = alpha[0]
@@ -118,7 +118,7 @@ def next_layer_second_order(u_prev, a2, sigma, func, alpha, beta, gamma, t_now, 
         a[-1] = - 2 * coef * sigma
         b[-1] = 1 + 2 * coef * sigma * h * alpha[1] / beta[1] + 2 * coef * sigma
         c[-1] = 0.
-        f[-1] = u_prev[-1] - 2 * coef * sigma * h * gamma[1](t_now) / beta[1] + 2 * coef * (1 - sigma) * (h / beta[1] * (gamma[1](t_now) - alpha[1] * u_prev[-1]) + u_prev[-2] - u_prev[-1]) + tau * func(1., t_now - tau / 2)
+        f[-1] = u_prev[-1] - 2 * coef * sigma * h * gamma[1](t_now) / beta[1] + 2 * coef * (1 - sigma) * (h / beta[1] * (gamma[1](t_now - tau) - alpha[1] * u_prev[-1]) + u_prev[-2] - u_prev[-1]) + tau * func(1., t_now - tau / 2)
     else:
         a[-1] = 0.
         b[-1] = alpha[1]
@@ -196,12 +196,14 @@ def order_of_approximation():
         u = np.zeros((2, N))
         u[0] = phi(x_range)
         u[1] = next_layer(u[0], a, sigma, f, alpha, beta, gamma, tau, tau, h)
+        error[i] = max(error[i], np.max(np.abs(u[0] - u0(x_range, t_min))))
+        error[i] = max(error[i], np.max(np.abs(u[1] - u0(x_range, t_min + tau))))
         for t in t_range:
             u[0] = u[1]
             u[1] = next_layer(u[0], a, sigma, f, alpha, beta, gamma, t, tau, h)
             error[i] = max(error[i], np.max(np.abs(u[1] - u0(x_range, t))))
 
-    plt.suptitle('Зависимость логарифма абсолютной погрешности от логарифма шага интегрирования')
+    plt.suptitle('Зависимость логарифма абсолютной погрешности от логарифма шага разбиения сетки')
     plt.subplot(1, 1, 1)
     plt.xlabel("log(h)")
     plt.ylabel("log(max(|Δu|))")
@@ -215,5 +217,5 @@ def order_of_approximation():
 
 
 if __name__ == '__main__':
-    # order_of_approximation()  # Call it in order to check the order of approximation
-    animation()  # Call it in order to draw solution.gif
+    order_of_approximation()  # Call it in order to check the order of approximation
+    # animation()  # Call it in order to draw solution.gif
