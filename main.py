@@ -4,7 +4,7 @@ from matplotlib.animation import FuncAnimation
 
 
 def initial_conditions1():
-    # u_t = a * u_xx + f(x, t) | equation
+    # u_t = a * u_xx + f(x, t) | the heat equation
     # u(x, 0) = phi(x) | initial condition
     # alpha[0] * u(0, t) + beta[0] * u_x(0, t) = gamma[0](t) | left border condition
     # alpha[1] * u(1, t) + beta[1] * u_x(1, t) = gamma[1](t) | right border condition
@@ -20,7 +20,7 @@ def initial_conditions1():
 
 
 def initial_conditions2():
-    # u_t = a * u_xx + f(x, t) | equation
+    # u_t = a * u_xx + f(x, t) | the heat equation
     # u(x, 0) = phi(x) | initial condition
     # alpha[0] * u(0, t) + beta[0] * u_x(0, t) = gamma[0](t) | left border condition
     # alpha[1] * u(1, t) + beta[1] * u_x(1, t) = gamma[1](t) | right border condition
@@ -108,7 +108,7 @@ def next_layer_second_order(u_prev, a2, sigma, func, alpha, beta, gamma, t_now, 
         a[0] = 0.
         b[0] = 1 + 2 * coef * sigma - 2 * coef * sigma * h * alpha[0] / beta[0]
         c[0] = -2 * coef * sigma
-        f[0] = u_prev[0] - 2 * coef * sigma * h * gamma[0](t_now) / beta[0] + 2 * coef * (1 - sigma) * (u_prev[1] - u_prev[0] - h / beta[0] * (gamma[0](t_now) - alpha[0] * u_prev[0])) + tau * func(0, t_now - tau / 2)
+        f[0] = u_prev[0] - 2 * coef * sigma * h * gamma[0](t_now) / beta[0] + 2 * coef * (1 - sigma) * (u_prev[1] - u_prev[0] - h / beta[0] * (gamma[0](t_now) - alpha[0] * u_prev[0])) + tau * func(0., t_now - tau / 2)
     else:
         a[0] = 0.
         b[0] = alpha[0]
