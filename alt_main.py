@@ -43,7 +43,7 @@ def initial_conditions3(h):
     a = 1.
     sigma = 0.5
     phi = lambda x: 1
-    f = lambda x, t: - 5/h if 0.5 + h/2 >= x >= 0.5 - h/2 else 0
+    f = lambda x, t: - 0.4/h if 0.5 + h/2 >= x >= 0.5 - h/2 else 0
     alpha = np.array([0, 0])
     beta = np.array([1, 1])
     gamma = np.array([lambda t: 0, lambda t: 0])
@@ -51,7 +51,7 @@ def initial_conditions3(h):
     return a, sigma, phi, f, alpha, beta, gamma, u0
 
 
-def initial_conditions4(h, u):
+def initial_conditions4(h):
     # u_t = a * u_xx + f(x, t) | the heat equation
     # u(x, 0) = phi(x) | initial condition
     # alpha[0] * u(0, t) + beta[0] * u_x(0, t) = gamma[0](t) | left border condition
@@ -59,7 +59,7 @@ def initial_conditions4(h, u):
     a = 1.
     sigma = 0.5
     phi = lambda x: 1
-    f = lambda x, t: - 100 * u / h if 0.5 + h / 2 >= x >= 0.5 - h / 2 else 0
+    f = lambda x, t, u: - 100 * u / h if 0.5 + h / 2 >= x >= 0.5 - h / 2 else 0
     alpha = np.array([0, 0])
     beta = np.array([1, 1])
     gamma = np.array([lambda t: 0, lambda t: 0])
@@ -111,7 +111,7 @@ def next_layer_first_order(u_prev, a2, sigma, func, alpha, beta, gamma, t_now, t
         a[i] = coef * sigma
         b[i] = -1 - 2 * coef * sigma
         c[i] = coef * sigma
-        f[i] = -u_prev[i] - coef * (1 - sigma) * (u_prev[i + 1] - 2 * u_prev[i] + u_prev[i - 1]) - tau*func(i * h, t_now - tau/2)
+        f[i] = -u_prev[i] - coef * (1 - sigma) * (u_prev[i + 1] - 2 * u_prev[i] + u_prev[i - 1]) - tau*func(i * h, t_now - tau/2, u_prev[i])
     a[0] = 0.
     b[0] = -beta[0] / h + alpha[0]
     c[0] = beta[0] / h
@@ -135,12 +135,12 @@ def next_layer_second_order(u_prev, a2, sigma, func, alpha, beta, gamma, t_now, 
         b[i] = -1 - 2 * coef * sigma
         c[i] = coef * sigma
         f[i] = -u_prev[i] - coef * (1 - sigma) * (u_prev[i + 1] - 2 * u_prev[i] + u_prev[i - 1]) - tau * func(i * h,
-                                                                                                              t_now - tau / 2)
+                                                                                                              t_now - tau / 2, u_prev[i])
     if beta[0] != 0:
         a[0] = 0.
         b[0] = 1 + 2 * coef * sigma - 2 * coef * sigma * h * alpha[0] / beta[0]
         c[0] = -2 * coef * sigma
-        f[0] = u_prev[0] - 2 * coef * sigma * h * gamma[0](t_now) / beta[0] + 2 * coef * (1 - sigma) * (u_prev[1] - u_prev[0] - h / beta[0] * (gamma[0](t_now - tau) - alpha[0] * u_prev[0])) + tau * func(0., t_now - tau / 2)
+        f[0] = u_prev[0] - 2 * coef * sigma * h * gamma[0](t_now) / beta[0] + 2 * coef * (1 - sigma) * (u_prev[1] - u_prev[0] - h / beta[0] * (gamma[0](t_now - tau) - alpha[0] * u_prev[0])) + tau * func(0., t_now - tau / 2, u_prev[0])
     else:
         a[0] = 0.
         b[0] = alpha[0]
@@ -150,7 +150,7 @@ def next_layer_second_order(u_prev, a2, sigma, func, alpha, beta, gamma, t_now, 
         a[-1] = - 2 * coef * sigma
         b[-1] = 1 + 2 * coef * sigma * h * alpha[1] / beta[1] + 2 * coef * sigma
         c[-1] = 0.
-        f[-1] = u_prev[-1] - 2 * coef * sigma * h * gamma[1](t_now) / beta[1] + 2 * coef * (1 - sigma) * (h / beta[1] * (gamma[1](t_now - tau) - alpha[1] * u_prev[-1]) + u_prev[-2] - u_prev[-1]) + tau * func(1., t_now - tau / 2)
+        f[-1] = u_prev[-1] - 2 * coef * sigma * h * gamma[1](t_now) / beta[1] + 2 * coef * (1 - sigma) * (h / beta[1] * (gamma[1](t_now - tau) - alpha[1] * u_prev[-1]) + u_prev[-2] - u_prev[-1]) + tau * func(1., t_now - tau / 2, u_prev[-1])
     else:
         a[-1] = 0.
         b[-1] = alpha[1]
@@ -166,11 +166,11 @@ def animation():
     t_min = 0.  # initial time
     t_max = 40.  # end time
     h = 0.01  # space step
-    tau = h  # time step
+    tau = 0.001  # time step
     N = int((x_max - x_min) // h)  # number of points
     x_range = np.linspace(x_min, x_max, N)
 
-    a, sigma, phi, f, alpha, beta, gamma, u0 = initial_conditions3(h)
+    a, sigma, phi, f, alpha, beta, gamma, u0 = initial_conditions4(h)
     next_layer = next_layer_second_order
 
     u = np.zeros((2, N))
